@@ -1,0 +1,31 @@
+{
+    "name": "lightspeedhq/ls-retail-guzzle",
+    "description": "A Guzzle HTTP Client extension for Lightspeed Retail.",
+    "keywords": [
+        "lightspeed",
+        "ecommerce",
+        "pos",
+        "guzzle",
+        "api",
+        "rest"
+    ],
+    "authors": [
+        {
+            "name": "Michael Carey",
+            "email": "michael.carey@lightspeedhq.com",
+        },
+        {
+            "name": "James Ratcliffe",
+            "email": "james.ratcliffe@lightspeedhq.com",
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "LightspeedHQ\\Retail\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.6",
+        "guzzlehttp/guzzle": "~6.0"
+    }
+}
