@@ -9,6 +9,7 @@
         "api",
         "rest"
     ],
+    "homepage": "https://github.com/jamesratcliffe/ls-retail-guzzle",
     "authors": [
         {
             "name": "Michael Carey",
