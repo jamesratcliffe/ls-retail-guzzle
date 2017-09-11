@@ -13,11 +13,11 @@
     "authors": [
         {
             "name": "Michael Carey",
-            "email": "michael.carey@lightspeedhq.com",
+            "email": "michael.carey@lightspeedhq.com"
         },
         {
             "name": "James Ratcliffe",
-            "email": "james.ratcliffe@lightspeedhq.com",
+            "email": "james.ratcliffe@lightspeedhq.com"
         }
     ],
     "autoload": {
