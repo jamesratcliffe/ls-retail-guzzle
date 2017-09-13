@@ -183,9 +183,11 @@ class RetailClient extends Client
         $response = $this->post('https://cloud.merchantos.com/oauth/access_token.php', [
             'multipart' => $payload
         ]);
-        $this->access_token = json_decode($response->getBody(), true)['access_token'];
-        error_log($response->getBody(), 0);
-        error_log('New Access Token: '. $this->access_token, 0);
+        $token = json_decode($response->getBody(), true)['access_token'];
+        if ($token) {
+            $this->access_token = $token;
+            error_log('New Access Token: '. substr($token, 0, 8) . '************', 0);
+        }
     }
 
     /**
