@@ -119,13 +119,13 @@ class RetailClient extends Client
 
             if ($response) {
                 $code = $response->getStatusCode();
-                $log_message = 'HTTP Error ' . $code . ":\n" . $response->getBody();
                 // 401: Refresh access token and try again once
                 if ($code == 401 && $retries <= 1) {
-                    $log_message = "HTTP Error 401. Refreshing Access Token…";
+                    error_log("HTTP Error 401. Refreshing Access Token…");
                     $this->refreshToken();
                     $should_retry = true;
                 }
+                $log_message = 'HTTP Error ' . $code . ":\n" . $response->getBody();
                 // 429, 502, 503, 504: try again
                 if (in_array($code, [429, 502, 503, 504])) {
                     $should_retry = true;
