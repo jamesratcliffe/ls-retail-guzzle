@@ -1,7 +1,7 @@
 <?php
 
 require 'vendor/autoload.php';
-require_once 'RetailClient.php';
+use LightspeedHQ\Retail\RetailClient;
 
 // Replace these with your own values for testing.
 // API tokens and client credentials should not be stored in your code!
@@ -33,4 +33,5 @@ $payload = [
         ]
     ]
 ];
-$client->put('Item/617', ['json' => $payload]);
+$response = $client->post('Item', ['json' => $payload]);
+var_dump(json_decode($response->getBody(), true));
