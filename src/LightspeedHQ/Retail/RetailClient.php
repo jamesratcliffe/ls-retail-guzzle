@@ -184,6 +184,7 @@ class RetailClient extends Client
             'multipart' => $payload
         ]);
         $this->access_token = json_decode($response->getBody(), true)['access_token'];
+        error_log($response->getBody(), 0);
         error_log('New Access Token: '. $this->access_token, 0);
     }
 
