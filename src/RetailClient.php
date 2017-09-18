@@ -109,6 +109,7 @@ class RetailClient extends Client
             }
 
             $should_retry = false;
+            $refresh = false;
             $log_message = null;
 
             // Retry connection exceptions
@@ -119,10 +120,13 @@ class RetailClient extends Client
 
             if ($response) {
                 $code = $response->getStatusCode();
+                if ($code >= 400) {
+                    $response_json = json_encode(json_decode($response->getBody()), JSON_PRETTY_PRINT);
+                    $log_message = 'HTTP Error ' . $code . ":\n" . $response_json;
+                }
                 // 401: Refresh access token and try again once
                 if ($code == 401 && $retries <= 1) {
-                    error_log("HTTP Error 401. Refreshing Access Token…");
-                    $this->refreshToken();
+                    $refresh = true;
                     $should_retry = true;
                 }
                 $log_message = 'HTTP Error ' . $code . ":\n" . $response->getBody();
@@ -131,10 +135,15 @@ class RetailClient extends Client
                     $should_retry = true;
                 }
             }
+            if ($log_message and $code >= 400) {
+                error_log($log_message, 0);
+                error_log($response->getBody());
+            }
+            if ($refresh) {
+                error_log("Refreshing Access Token…");
+                $this->refreshToken();
+            }
             if ($should_retry) {
-                if ($log_message) {
-                    error_log($log_message, 0);
-                }
                 if ($retries > 0) {
                     error_log('Retry ' . $retries . '…', 0);
                 }
@@ -168,9 +177,7 @@ class RetailClient extends Client
     }
 
     /**
-    * A middleware method to refresh the access token.
-    *
-    * @return callable
+    * A method to refresh the access token.
     */
     protected function refreshToken()
     {
