@@ -129,15 +129,13 @@ class RetailClient extends Client
                     $refresh = true;
                     $should_retry = true;
                 }
-                $log_message = 'HTTP Error ' . $code . ":\n" . $response->getBody();
                 // 429, 502, 503, 504: try again
                 if (in_array($code, [429, 502, 503, 504])) {
                     $should_retry = true;
                 }
             }
-            if ($log_message and $code >= 400) {
+            if ($log_message) {
                 error_log($log_message, 0);
-                error_log($response->getBody());
             }
             if ($refresh) {
                 error_log("Refreshing Access Token…");
