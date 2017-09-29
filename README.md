@@ -4,6 +4,8 @@ The class is an extension of the Guzzle 6 PHP HTTP Client for use with the Light
 
 It works the same way as the standard Guzzle Client, but takes care of refreshing access tokens and rate limiting.
 
+**This package was created for demonstration purposes and comes with no waranty.**
+
 ## Installation
 
 Use this commmand to install with Composer:
