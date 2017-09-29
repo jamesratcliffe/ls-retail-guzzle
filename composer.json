@@ -20,6 +20,7 @@
             "email": "james.ratcliffe@lightspeedhq.com"
         }
     ],
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "LightspeedHQ\\Retail\\": "src/"
