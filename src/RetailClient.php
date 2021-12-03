@@ -19,7 +19,7 @@ use GuzzleHttp\Exception\ConnectException;
 */
 class RetailClient extends Client
 {
-    const HOST = "https://api.merchantos.com/";
+    const HOST = "https://api.lightspeedapp.com/";
 
     public $account_id;
     private $refresh_token;
@@ -123,15 +123,15 @@ class RetailClient extends Client
                 if ($code >= 400) {
                     $response_json = json_encode(json_decode($response->getBody()), JSON_PRETTY_PRINT);
                     $log_message = 'HTTP Error ' . $code . ":\n" . $response_json;
-                }
-                // 401: Refresh access token and try again once
-                if ($code == 401 && $retries <= 1) {
-                    $refresh = true;
-                    $should_retry = true;
-                }
-                // 429, 502, 503, 504: try again
-                if (in_array($code, [429, 502, 503, 504])) {
-                    $should_retry = true;
+                    // 429, 502, 503, 504: try again
+                    if (in_array($code, [429, 502, 503, 504])) {
+                        $should_retry = true;
+                    }
+                    // 401: Refresh access token and try again once
+                    elseif ($code == 401 && $retries <= 1) {
+                        $refresh = true;
+                        $should_retry = true;
+                    }
                 }
             }
             if ($log_message) {
@@ -141,10 +141,8 @@ class RetailClient extends Client
                 error_log("Refreshing Access Token…");
                 $this->refreshToken();
             }
-            if ($should_retry) {
-                if ($retries > 0) {
+            if (($should_retry) && ($retries > 0)) {
                     error_log('Retry ' . $retries . '…', 0);
-                }
             }
             return $should_retry;
         };
@@ -163,14 +161,7 @@ class RetailClient extends Client
     {
         return function ($numberOfRetries, ResponseInterface $response = null) {
             // No delay for 401 or 429 responses
-            if ($response) {
-                $code = $response->getStatusCode();
-                if (in_array($code, [401, 429])) {
-                    return 0;
-                }
-            }
-            // Increasing delay otherwise
-            return 1000 * $numberOfRetries;
+            return (($response) && in_array($response->getStatusCode(), [401, 429])) ? 0 : 1000 * $numberOfRetries;
         };
     }
 
@@ -179,17 +170,15 @@ class RetailClient extends Client
     */
     protected function refreshToken()
     {
-        $payload = [
-            ['name' => 'client_id', 'contents' => $this->client_id],
-            ['name' => 'client_secret', 'contents' => $this->client_secret],
-            ['name' => 'refresh_token', 'contents' => $this->refresh_token],
-            ['name' => 'grant_type', 'contents' => 'refresh_token'],
-        ];
-        $response = $this->post('https://cloud.merchantos.com/oauth/access_token.php', [
-            'multipart' => $payload
+        $response = $this->post('https://cloud.lightspeedapp.com/oauth/access_token.php', [
+            'multipart' => [
+                ['name' => 'client_id', 'contents' => $this->client_id],
+                ['name' => 'client_secret', 'contents' => $this->client_secret],
+                ['name' => 'refresh_token', 'contents' => $this->refresh_token],
+                ['name' => 'grant_type', 'contents' => 'refresh_token'],
+            ]
         ]);
-        $token = json_decode($response->getBody(), true)['access_token'];
-        if ($token) {
+        if ($token = json_decode($response->getBody(), true)['access_token']) {
             $this->access_token = $token;
             error_log('New Access Token: '. substr($token, 0, 8) . '************', 0);
         }
@@ -208,13 +197,9 @@ class RetailClient extends Client
     protected function checkBucket()
     {
         return function (RequestInterface $request) {
-            $cost = strtolower($request->getMethod()) == 'get' ? 1 : 10;
-            $overflow = $cost - $this->bucket['available'];
+            $overflow = (strtolower($request->getMethod()) == 'get' ? 1 : 10) - $this->bucket['available'];
             if ($overflow > 0) {
-                // die(var_dump($this));
-                $sleep_time = $overflow / $this->bucket['drip'];
-                $time_since_last = time() - $this->last_req_time;
-                if ($sleep_time > $time_since_last) {
+                if (($sleep_time = $overflow / $this->bucket['drip']) > (time() - $this->last_req_time)) {
                     $sleep_microseconds = ceil($sleep_time * 1000000);
                     error_log('Notice: Rate limit reached, sleeping ' . $sleep_microseconds / 1000000 . ' seconds.', 0);
                     usleep($sleep_microseconds);
@@ -236,15 +221,13 @@ class RetailClient extends Client
     protected function getBucket()
     {
         return function (ResponseInterface $response) {
-            $bucket_header = $response->getHeader('X-LS-API-Bucket-Level');
-            if (count($bucket_header) > 0) {
-                $bucket = explode('/', $response->getHeader('X-LS-API-Bucket-Level')[0]);
+            if (count($bucket_header = $response->getHeader('X-LS-API-Bucket-Level')) > 0) {
+                $bucket = explode('/', $bucket_header[0]);
                 $this->bucket = [
                     'level' => $bucket[0],
                     'size' => $bucket[1],
                     'available' => $bucket[1] - $bucket[0],
-                    // TODO: use the new drip rate header.
-                    'drip' => $bucket[1] / 60
+                    'drip' => $response->getHeader('X-LS-API-Drip-Rate')
                 ];
             }
             $this->last_req_time = time();
